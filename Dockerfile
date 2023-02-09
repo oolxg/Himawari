@@ -1,12 +1,10 @@
-# ================================
-# Build image
-# ================================
-FROM swift:5.7-jammy as build
+FROM swiftarm/swift:5.6.2-ubuntu-focal as build
 
 # Install OS updates and, if needed, sqlite3
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && apt-get -q update \
-    && apt-get -q dist-upgrade -y\
+    && apt-get -q dist-upgrade -y \
+    && apt-get install -y libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up a build area
@@ -42,7 +40,7 @@ RUN [ -d /build/Resources ] && { mv /build/Resources ./Resources && chmod -R a-w
 # ================================
 # Run image
 # ================================
-FROM ubuntu:jammy
+FROM ubuntu:focal
 
 # Make sure all system packages are up to date, and install only essential packages.
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
@@ -51,10 +49,11 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && apt-get -q install -y \
       ca-certificates \
       tzdata \
+      sqlite3 \
 # If your app or its dependencies import FoundationNetworking, also install `libcurl4`.
-      # libcurl4 \
+     libcurl4 \
 # If your app or its dependencies import FoundationXML, also install `libxml2`.
-      # libxml2 \
+      libxml2 \
     && rm -r /var/lib/apt/lists/*
 
 # Create a vapor user and group with /app as its home directory
@@ -69,9 +68,9 @@ COPY --from=build --chown=vapor:vapor /staging /app
 # Ensure all further commands run as the vapor user
 USER vapor:vapor
 
-# Let Docker bind to port 8080
-EXPOSE 8080
+# Let Docker bind to port 8083
+EXPOSE 8083
 
 # Start the Vapor service when the image is run, default to listening on 8080 in production environment
 ENTRYPOINT ["./Run"]
-CMD ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
+CMD ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8083"]
