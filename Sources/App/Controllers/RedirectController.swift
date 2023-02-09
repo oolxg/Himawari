@@ -28,6 +28,12 @@ struct RedirectController: RouteCollection {
             throw Abort(.notFound)
         }
 
+        let visitsCount = try await alias.$visits.get(on: req.db).count
+
+        if let maxVisitsCount = alias.maxVisitsCount, visitsCount >= maxVisitsCount {
+            throw Abort(.notFound)
+        }
+
         // header is needed if service used via Cloudflare proxy
         let originalIP = req.headers["CF-Connecting-IP"].first ?? req.remoteAddress?.ipAddress
         let ua = req.headers["User-Agent"].first

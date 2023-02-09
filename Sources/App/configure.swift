@@ -23,6 +23,7 @@ public func configure(_ app: Application) throws {
 public func runMigrations(_ app: Application) throws {
     app.migrations.add(CreateURLAliasTable())
     app.migrations.add(CreateVisitTable())
+    app.migrations.add(AddURLAliasMaxVisitsCount())
     
     if app.environment == .testing {
         try app.autoRevert().wait()

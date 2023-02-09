@@ -9,12 +9,14 @@ struct CreateAliasRequest: Content {
     let alias: String?
     let destination: String
     let validUntil: Date?
+    let maxVisitsCount: Int?
 }
 
 struct UpdateAliasRequest: Content {
     let aliasID: UUID
     let validUntil: Date?
     let isActive: Bool?
+    let maxVisitsCount: Int?
 }
 
 struct DeleteAliasRequest: Content {

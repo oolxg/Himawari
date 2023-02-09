@@ -18,11 +18,9 @@ final class RedirectControllerTests: XCTestCase {
 
     func testRedirect() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
-
-            let aliasID = try res.content.decode(URLAlias.self).id!
 
             try app.test(.GET, "test", afterResponse: { res in
                 XCTAssertEqual(res.status, .seeOther)
@@ -39,14 +37,14 @@ final class RedirectControllerTests: XCTestCase {
 
     func testRedirect_notActive() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
 
             let aliasID = try res.content.decode(URLAlias.self).id!
 
             try app.test(.PUT, "api/v1", beforeRequest: { req in
-                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, validUntil: nil, isActive: false))
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, validUntil: nil, isActive: false, maxVisitsCount: nil))
             }, afterResponse: { res in
                 XCTAssertEqual(res.status, .ok)
 
@@ -59,14 +57,62 @@ final class RedirectControllerTests: XCTestCase {
 
     func testRedirect_expired() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: Date().advanced(by: -60)))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.PUT, "api/v1", beforeRequest: { req in
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, validUntil: Date().addingTimeInterval(-1), isActive: nil, maxVisitsCount: nil))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+
+                try app.test(.GET, "test", afterResponse: { res in
+                    XCTAssertEqual(res.status, .notFound)
+                })
+            })
+        })
+    }
+
+    func testVisitsCountRedirect() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: 1))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            try app.test(.GET, "test", afterResponse: { res in
+                XCTAssertEqual(res.status, .seeOther)
+                XCTAssertEqual(res.headers.first(name: .location), "https://google.com")
+
+                try app.test(.GET, "test", afterResponse: { res in
+                    XCTAssertEqual(res.status, .notFound)
+                })
+            })
+        })
+    }
+
+    func testVisitsCountRedirect_withUpdate() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
 
             let aliasID = try res.content.decode(URLAlias.self).id!
 
             try app.test(.GET, "test", afterResponse: { res in
-                XCTAssertEqual(res.status, .notFound)
+                XCTAssertEqual(res.status, .seeOther)
+                XCTAssertEqual(res.headers.first(name: .location), "https://google.com")
+
+                try app.test(.PUT, "api/v1", beforeRequest: { req in
+                    try req.content.encode(UpdateAliasRequest(aliasID: aliasID, validUntil: nil, isActive: nil, maxVisitsCount: 1))
+                }, afterResponse: { res in
+                    XCTAssertEqual(res.status, .ok)
+
+                    try app.test(.GET, "test", afterResponse: { res in
+                        XCTAssertEqual(res.status, .notFound)
+                    })
+                })
             })
         })
     }

@@ -41,7 +41,8 @@ struct AliasController: RouteCollection {
         let alias = URLAlias(
             alias: aliasString,
             destination: aliasRequest.destination,
-            validUntil: aliasRequest.validUntil
+            validUntil: aliasRequest.validUntil,
+            maxVisitsCount: aliasRequest.maxVisitsCount
         )
 
         try await alias.save(on: req.db)
@@ -52,13 +53,14 @@ struct AliasController: RouteCollection {
     func update(req: Request) async throws -> HTTPStatus {
         let aliasRequest = try req.content.decode(UpdateAliasRequest.self)
 
-        if aliasRequest.validUntil == nil && aliasRequest.isActive == nil {
+        if aliasRequest.validUntil == nil && aliasRequest.isActive == nil && aliasRequest.maxVisitsCount == nil {
             throw Abort(.badRequest, reason: "Nothing to update")
         }
 
         if let alias = try await URLAlias.find(aliasRequest.aliasID, on: req.db) {
             alias.validUntil = aliasRequest.validUntil
             alias.isActive = aliasRequest.isActive ?? alias.isActive
+            alias.maxVisitsCount = aliasRequest.maxVisitsCount
             try await alias.save(on: req.db)
             return .ok
         }
