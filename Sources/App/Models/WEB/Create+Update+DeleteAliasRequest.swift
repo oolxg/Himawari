@@ -33,6 +33,6 @@ struct UpdateAliasRequest: Content {
     }
 }
 
-struct DeleteAliasRequest: Content {
+struct  DeleteAliasRequest: Content {
     let aliasID: UUID
 }

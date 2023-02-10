@@ -73,8 +73,10 @@ struct AliasController: RouteCollection {
     }
     
     func delete(req: Request) async throws -> HTTPStatus {
-        let alias = try req.content.decode(DeleteAliasRequest.self)
-        if let alias = try await URLAlias.query(on: req.db).filter(\.$id == alias.aliasID).first() {
+        let aliasRequest = try req.content.decode(DeleteAliasRequest.self)
+        
+        if let alias = try await URLAlias.query(on: req.db).filter(\.$id == aliasRequest.aliasID).first() {
+            try await Visit.query(on: req.db).filter(\.$alias.$id == alias.id!).delete()
             try await alias.delete(on: req.db)
             return .ok
         }

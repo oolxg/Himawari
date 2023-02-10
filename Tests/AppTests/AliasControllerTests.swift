@@ -95,6 +95,7 @@ final class AliasControllerTests: XCTestCase {
     }
 
     func testDeleteAlias() throws {
+        // first create alias, then visit it and then delete
         try app.test(.POST, "api/v1", beforeRequest: { req in
             try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
         }, afterResponse: { res in
@@ -102,11 +103,24 @@ final class AliasControllerTests: XCTestCase {
 
             let aliasID = try res.content.decode(URLAlias.self).id!
 
-            try app.test(.DELETE, "api/v1", beforeRequest: { req in
-                try req.content.encode(DeleteAliasRequest(aliasID: aliasID))
-            }, afterResponse: { res in
-                XCTAssertEqual(res.status, .ok)
-            })
+            try app.test(.GET, "test") { res in
+                XCTAssertEqual(res.status, .seeOther)
+                XCTAssertEqual(res.headers.first(name: .location), "https://google.com")
+
+                try app.test(.DELETE, "api/v1", beforeRequest: { req in
+                    try req.content.encode(DeleteAliasRequest(aliasID: aliasID))
+                }, afterResponse: { res in
+                    XCTAssertEqual(res.status, .ok)
+                })
+            }
+        })
+    }
+
+    func testDeleteAlias_notFound() throws {
+        try app.test(.DELETE, "api/v1", beforeRequest: { req in
+            try req.content.encode(DeleteAliasRequest(aliasID: UUID()))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .notFound)
         })
     }
 
