@@ -13,7 +13,7 @@ final class Visit: Model, Content {
     var id: UUID?
 
     @Parent(key: "alias_id")
-    var alias: URLAlias
+    var parentAlias: URLAlias
 
     @Field(key: "ip")
     var ip: String?
@@ -30,7 +30,7 @@ final class Visit: Model, Content {
     init() { }
 
     init(aliasID: UUID, ip: String?, userAgent: String?) {
-        self.$alias.id = aliasID
+        self.$parentAlias.id = aliasID
         self.ip = ip
         self.userAgent = userAgent
     }

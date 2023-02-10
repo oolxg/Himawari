@@ -27,7 +27,7 @@ final class URLAlias: Model, Content {
     @Field(key: "max_visits_count")
     var maxVisitsCount: Int?
 
-    @Children(for: \.$alias)
+    @Children(for: \.$parentAlias)
     var visits: [Visit]
 
     @Timestamp(key: "created_at", on: .create)

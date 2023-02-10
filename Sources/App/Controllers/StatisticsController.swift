@@ -22,7 +22,13 @@ struct StatisticsController: RouteCollection {
             throw Abort(.notFound)
         }
         
-        return try await alias.$visits.get(on: req.db)
+        let visits = try await alias.$visits.get(on: req.db)
+        
+        for visit in visits {
+            _ = try await visit.$parentAlias.get(on: req.db)
+        }
+        
+        return visits
     }
     
     func getVisits(req: Request) async throws -> [Visit] {
@@ -36,7 +42,7 @@ struct StatisticsController: RouteCollection {
             .all()
         
         for visit in visits {
-            _ = try await visit.$alias.get(on: req.db)
+            _ = try await visit.$parentAlias.get(on: req.db)
         }
         
         return visits
