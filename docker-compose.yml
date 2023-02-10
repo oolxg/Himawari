@@ -29,7 +29,7 @@ services:
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-debug}
       DATABASE_HOST: db
-      DATABASE_PORT: 5435
+      DATABASE_PORT: 5432
       DATABASE_NAME: HimawariDB
       DATABASE_USERNAME: HimawariUser
       DATABASE_PASSWORD: 12345678
@@ -50,9 +50,9 @@ services:
       POSTGRES_PASSWORD: 12345678
       POSTGRES_DB: HimawariDB
     expose:
-      - 5435
+      - 5432
     ports:
-      - '5435:5435'
+      - '5432:5432'
 
   pgbackups:
     container_name: himawari_pgbackups
@@ -66,7 +66,7 @@ services:
       - db
     environment:
       POSTGRES_HOST: db
-      DATABASE_PORT: 5435
+      DATABASE_PORT: 5432
       POSTGRES_DB: HimawariDB
       POSTGRES_USER: HimawariUser
       POSTGRES_PASSWORD: 12345678
