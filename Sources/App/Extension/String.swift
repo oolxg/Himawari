@@ -12,12 +12,13 @@ extension String {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
         return String((0..<length).map { _ in letters.randomElement()! })
     }
-
-    func isURL() -> Bool {
-        guard let url = URL(string: self) else { return false }
-
-        let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-        let matches = detector.matches(in: url.absoluteString, options: [], range: NSRange(location: 0, length: url.absoluteString.utf16.count))
-        return matches.count == 1
+    
+    func isValidURL() -> Bool {
+        let urlString = self
+        let pat = #"([\w-]+\.)+[\w-]+(/[\w- ;,./?%&=]*)?"#
+        let regex = try! NSRegularExpression(pattern: pat, options: [])
+        
+        let matches = regex.numberOfMatches(in: urlString, options: [], range: NSMakeRange(0, urlString.utf16.count))
+        return urlString.hasPrefix("http") && matches == 1
     }
 }

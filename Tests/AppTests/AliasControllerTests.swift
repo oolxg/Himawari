@@ -18,15 +18,37 @@ final class AliasControllerTests: XCTestCase {
 
     func testCreateExactAlias() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
         })
     }
 
+    func testCreateExactAliasThatAlreadyExists() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            try app.test(.POST, "api/v1", beforeRequest: { req in
+                try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .conflict)
+            })
+        })
+    }
+
+    func testCreateAliasWithPastDate() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(destination: "https://google.com", validUntil: Date().advanced(by: -60 * 3)))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .badRequest)
+        })
+    }
+
     func testCreateRandomAlias() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: nil, destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
+            try req.content.encode(CreateAliasRequest(destination: "https://google.com"))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
         })
@@ -34,7 +56,7 @@ final class AliasControllerTests: XCTestCase {
 
     func testUpdateAlias_notFound() throws {
         try app.test(.PUT, "api/v1", beforeRequest: { req in
-            try req.content.encode(UpdateAliasRequest(aliasID: UUID(), validUntil: Date().advanced(by: 60 * 3), isActive: nil, maxVisitsCount: nil))
+            try req.content.encode(UpdateAliasRequest(aliasID: UUID(), validUntil: Date().advanced(by: 60 * 3)))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .notFound)
         })
@@ -42,23 +64,39 @@ final class AliasControllerTests: XCTestCase {
 
     func testUpdateAlias() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
 
             let aliasID = try res.content.decode(URLAlias.self).id!
 
             try app.test(.PUT, "api/v1", beforeRequest: { req in
-                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, validUntil: Date().advanced(by: 60 * 3), isActive: nil, maxVisitsCount: nil))
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, validUntil: Date().advanced(by: 60 * 3)))
             }, afterResponse: { res in
                 XCTAssertEqual(res.status, .ok)
             })
         })
     }
 
+    func testUpdateAliasWithNoParams() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.PUT, "api/v1", beforeRequest: { req in
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .badRequest)
+            })
+        })
+    }
+
     func testDeleteAlias() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
 
@@ -74,7 +112,7 @@ final class AliasControllerTests: XCTestCase {
 
     func testGetAlias() throws {
         try app.test(.POST, "api/v1", beforeRequest: { req in
-            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", validUntil: nil, maxVisitsCount: nil))
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
         })

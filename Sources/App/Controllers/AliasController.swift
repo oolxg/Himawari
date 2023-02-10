@@ -34,8 +34,12 @@ struct AliasController: RouteCollection {
             aliasString = String.randomString(length: 3)
         }
 
-        guard aliasRequest.destination.isURL() else {
+        guard aliasRequest.destination.isValidURL() else {
             throw Abort(.badRequest, reason: "Invalid destination URL")
+        }
+        
+        if let validUntil = aliasRequest.validUntil, validUntil < Date() {
+            throw Abort(.badRequest, reason: "Invalid validUntil date")
         }
 
         let alias = URLAlias(

@@ -21,14 +21,15 @@ volumes:
 
 services:
   app:
-    image: Himawari
-    container_name: Himawari
+    image: himawari
+    container_name: himawari
     restart: unless-stopped
     build:
       context: .
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-debug}
       DATABASE_HOST: db
+      DATABASE_PORT: 5435
       DATABASE_NAME: HimawariDB
       DATABASE_USERNAME: HimawariUser
       DATABASE_PASSWORD: 12345678
@@ -40,7 +41,7 @@ services:
     command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8083"]
   db:
     image: postgres:14-alpine
-    container_name: HimawariDB
+    container_name: himawari_db
     restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data/
@@ -49,20 +50,23 @@ services:
       POSTGRES_PASSWORD: 12345678
       POSTGRES_DB: HimawariDB
     expose:
-      - 5433
+      - 5435
+    ports:
+      - '5435:5435'
 
   pgbackups:
-    container_name: Himawari_pgbackups
+    container_name: himawari_pgbackups
     image: prodrigestivill/postgres-backup-local
     restart: always
     volumes:
-      - ~/db_backups:/backups
+      - ~/himawari_db_backups:/backups
     links:
       - db:db
     depends_on:
       - db
     environment:
       POSTGRES_HOST: db
+      DATABASE_PORT: 5435
       POSTGRES_DB: HimawariDB
       POSTGRES_USER: HimawariUser
       POSTGRES_PASSWORD: 12345678
