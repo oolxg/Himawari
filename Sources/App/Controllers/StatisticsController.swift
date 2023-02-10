@@ -29,10 +29,16 @@ struct StatisticsController: RouteCollection {
         let limit = req.query["limit"] as Int? ?? 100
         let offset = req.query["offset"] as Int? ?? 0
         
-        return try await Visit.query(on: req.db)
+        let visits = try await Visit.query(on: req.db)
             .limit(limit)
             .offset(offset)
             .sort(\.$createdAt, .descending)
             .all()
+        
+        for visit in visits {
+            _ = try await visit.$alias.get(on: req.db)
+        }
+        
+        return visits
     }
 }
