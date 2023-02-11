@@ -197,4 +197,40 @@ final class AliasControllerTests: XCTestCase {
             })
         })
     }
+
+    func testCreateAliasWithInvalidURL() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "invalidURL", maxVisitsCount: 0))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .badRequest)
+        })
+
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "google.com", maxVisitsCount: 0))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .badRequest)
+        })
+    }
+
+    func testUpdateAliasWithInvalidURL() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.PUT, "api/v1", beforeRequest: { req in
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, newDestination: "invalidURL"))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .badRequest)
+            })
+
+            try app.test(.PUT, "api/v1", beforeRequest: { req in
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, newDestination: "google.com"))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .badRequest)
+            })
+        })
+    }
 }

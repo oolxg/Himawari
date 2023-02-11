@@ -67,6 +67,10 @@ struct AliasController: RouteCollection {
         }
 
         if let alias = try await URLAlias.find(updateRequest.aliasID, on: req.db) {
+            if let url = updateRequest.newDestination, !url.isValidURL() {
+                throw Abort(.badRequest, reason: "Invalid destination URL")
+            }
+
             alias.validUntil = updateRequest.validUntil
             alias.isActive = updateRequest.isActive ?? alias.isActive
             alias.maxVisitsCount = updateRequest.maxVisitsCount
