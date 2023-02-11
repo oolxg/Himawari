@@ -27,6 +27,9 @@ final class URLAlias: Model, Content {
     @Field(key: "max_visits_count")
     var maxVisitsCount: Int?
 
+    @Field(key: "description")
+    var description: String?
+
     @Children(for: \.$parentAlias)
     var visits: [Visit]
 
@@ -38,11 +41,12 @@ final class URLAlias: Model, Content {
 
     init() { }
 
-    init(alias: String, destination: String, validUntil: Date? = nil, isActive: Bool = true, maxVisitsCount: Int? = nil) {
+    init(alias: String, destination: String, validUntil: Date? = nil, isActive: Bool = true, maxVisitsCount: Int? = nil, description: String? = nil) {
         self.alias = alias
         self.destination = destination
         self.validUntil = validUntil
         self.isActive = isActive
         self.maxVisitsCount = maxVisitsCount
+        self.description = description
     }
 }

@@ -180,4 +180,21 @@ final class AliasControllerTests: XCTestCase {
             })
         })
     }
+
+    func testAliasDescription() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", description: "test description"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.GET, "api/v1", afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+
+                let alias = try res.content.decode([URLAlias].self).first(where: { $0.id == aliasID })
+                XCTAssertEqual(alias?.description, "test description")
+            })
+        })
+    }
 }

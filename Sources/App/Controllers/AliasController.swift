@@ -50,7 +50,8 @@ struct AliasController: RouteCollection {
             alias: aliasString,
             destination: aliasRequest.destination,
             validUntil: aliasRequest.validUntil,
-            maxVisitsCount: aliasRequest.maxVisitsCount
+            maxVisitsCount: aliasRequest.maxVisitsCount,
+            description: aliasRequest.description
         )
 
         try await alias.save(on: req.db)
@@ -62,7 +63,8 @@ struct AliasController: RouteCollection {
         let updateRequest = try req.content.decode(UpdateAliasRequest.self)
 
         if updateRequest.validUntil == nil && updateRequest.isActive == nil &&
-                   updateRequest.maxVisitsCount == nil && updateRequest.newDestination == nil {
+                   updateRequest.maxVisitsCount == nil && updateRequest.newDestination == nil &&
+                   updateRequest.description == nil {
             throw Abort(.badRequest, reason: "Nothing to update")
         }
 
@@ -71,6 +73,7 @@ struct AliasController: RouteCollection {
             alias.isActive = updateRequest.isActive ?? alias.isActive
             alias.maxVisitsCount = updateRequest.maxVisitsCount
             alias.destination = updateRequest.newDestination ?? alias.destination
+            alias.description = updateRequest.description ?? alias.description
             try await alias.save(on: req.db)
             return .ok
         }
