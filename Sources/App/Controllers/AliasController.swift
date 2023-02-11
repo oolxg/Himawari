@@ -21,37 +21,37 @@ struct AliasController: RouteCollection {
     }
     
     func create(req: Request) async throws -> URLAlias {
-        let aliasRequest = try req.content.decode(CreateAliasRequest.self)
+        let createRequest = try req.content.decode(CreateAliasRequest.self)
         
-        if let aliasURL = aliasRequest.alias,
+        if let aliasURL = createRequest.alias,
            try await URLAlias.query(on: req.db).filter(\.$alias == aliasURL).first() != nil {
             throw Abort(.conflict, reason: "Alias already exists")
         }
 
-        var aliasString = aliasRequest.alias ?? String.randomString(length: 3)
+        var aliasString = createRequest.alias ?? String.randomString(length: 3)
 
         while try await URLAlias.query(on: req.db).filter(\.$alias == aliasString).first() != nil {
             aliasString = String.randomString(length: 3)
         }
 
-        guard aliasRequest.destination.isValidURL() else {
+        guard createRequest.destination.isValidURL() else {
             throw Abort(.badRequest, reason: "Invalid destination URL")
         }
         
-        if let validUntil = aliasRequest.validUntil, validUntil < Date() {
+        if let validUntil = createRequest.validUntil, validUntil < Date() {
             throw Abort(.badRequest, reason: "Invalid validUntil date")
         }
 
-        guard aliasRequest.maxVisitsCount == nil || aliasRequest.maxVisitsCount! > 0 else {
+        guard createRequest.maxVisitsCount == nil || createRequest.maxVisitsCount! > 0 else {
             throw Abort(.badRequest, reason: "Invalid maxVisitsCount value")
         }
 
         let alias = URLAlias(
             alias: aliasString,
-            destination: aliasRequest.destination,
-            validUntil: aliasRequest.validUntil,
-            maxVisitsCount: aliasRequest.maxVisitsCount,
-            description: aliasRequest.description
+            destination: createRequest.destination,
+            validUntil: createRequest.validUntil,
+            maxVisitsCount: createRequest.maxVisitsCount,
+            description: createRequest.description
         )
 
         try await alias.save(on: req.db)
@@ -80,10 +80,10 @@ struct AliasController: RouteCollection {
     }
     
     func delete(req: Request) async throws -> HTTPStatus {
-        let aliasRequest = try req.content.decode(DeleteAliasRequest.self)
+        let deleteRequest = try req.content.decode(DeleteAliasRequest.self)
         
-        if let alias = try await URLAlias.query(on: req.db).filter(\.$id == aliasRequest.aliasID).first() {
-            try await Visit.query(on: req.db).filter(\.$parentAlias.$id == alias.id!).delete()
+        if let alias = try await URLAlias.query(on: req.db).filter(\.$id == deleteRequest.aliasID).first() {
+            try await alias.$visits.get(on: req.db).delete(force: true, on: req.db)
             try await alias.delete(on: req.db)
             return .ok
         }

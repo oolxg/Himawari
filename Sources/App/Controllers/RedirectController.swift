@@ -21,19 +21,17 @@ struct RedirectController: RouteCollection {
         }
         
         // header is needed if service used via Cloudflare proxy
-        let originalIP = req.headers["CF-Connecting-IP"].first ?? req.remoteAddress?.ipAddress
-        let ua = req.headers["User-Agent"].first
+        let ip = req.headers["CF-Connecting-IP"].first ?? req.remoteAddress?.ipAddress
+        let ua = req.headers.first(name: .userAgent)
         
-        let visit = Visit(aliasID: alias.id!, ip: originalIP, userAgent: ua)
+        let visit = Visit(aliasID: alias.id!, ip: ip, userAgent: ua)
 
         if let validUntil = alias.validUntil, validUntil < Date() {
-            visit.isSuccessful = false
             try await visit.save(on: req.db)
             throw Abort(.notFound)
         }
 
         if !alias.isActive {
-            visit.isSuccessful = false
             try await visit.save(on: req.db)
             throw Abort(.notFound)
         }
@@ -41,12 +39,13 @@ struct RedirectController: RouteCollection {
         let visitsCount = try await alias.$visits.get(on: req.db).count
 
         if let maxVisitsCount = alias.maxVisitsCount, visitsCount >= maxVisitsCount {
-            visit.isSuccessful = false
             try await visit.save(on: req.db)
             throw Abort(.notFound)
         }
 
+        visit.isSuccessful = true
         try await visit.save(on: req.db)
+        
         return req.redirect(to: alias.destination)
     }
 }

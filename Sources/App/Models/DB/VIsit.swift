@@ -32,7 +32,7 @@ final class Visit: Model, Content {
 
     init() { }
 
-    init(aliasID: UUID, ip: String?, userAgent: String?, isSuccessful: Bool = true) {
+    init(aliasID: UUID, ip: String?, userAgent: String?, isSuccessful: Bool = false) {
         self.$parentAlias.id = aliasID
         self.ip = ip
         self.userAgent = userAgent
