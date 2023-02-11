@@ -42,6 +42,10 @@ struct AliasController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid validUntil date")
         }
 
+        guard aliasRequest.maxVisitsCount == nil || aliasRequest.maxVisitsCount! > 0 else {
+            throw Abort(.badRequest, reason: "Invalid maxVisitsCount value")
+        }
+
         let alias = URLAlias(
             alias: aliasString,
             destination: aliasRequest.destination,
@@ -55,16 +59,18 @@ struct AliasController: RouteCollection {
     }
     
     func update(req: Request) async throws -> HTTPStatus {
-        let aliasRequest = try req.content.decode(UpdateAliasRequest.self)
+        let updateRequest = try req.content.decode(UpdateAliasRequest.self)
 
-        if aliasRequest.validUntil == nil && aliasRequest.isActive == nil && aliasRequest.maxVisitsCount == nil {
+        if updateRequest.validUntil == nil && updateRequest.isActive == nil &&
+                   updateRequest.maxVisitsCount == nil && updateRequest.newDestination == nil {
             throw Abort(.badRequest, reason: "Nothing to update")
         }
 
-        if let alias = try await URLAlias.find(aliasRequest.aliasID, on: req.db) {
-            alias.validUntil = aliasRequest.validUntil
-            alias.isActive = aliasRequest.isActive ?? alias.isActive
-            alias.maxVisitsCount = aliasRequest.maxVisitsCount
+        if let alias = try await URLAlias.find(updateRequest.aliasID, on: req.db) {
+            alias.validUntil = updateRequest.validUntil
+            alias.isActive = updateRequest.isActive ?? alias.isActive
+            alias.maxVisitsCount = updateRequest.maxVisitsCount
+            alias.destination = updateRequest.newDestination ?? alias.destination
             try await alias.save(on: req.db)
             return .ok
         }

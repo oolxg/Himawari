@@ -21,6 +21,9 @@ final class Visit: Model, Content {
     @Field(key: "user_agent")
     var userAgent: String?
 
+    @Field(key: "is_successful")
+    var isSuccessful: Bool
+
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
@@ -29,9 +32,10 @@ final class Visit: Model, Content {
 
     init() { }
 
-    init(aliasID: UUID, ip: String?, userAgent: String?) {
+    init(aliasID: UUID, ip: String?, userAgent: String?, isSuccessful: Bool = true) {
         self.$parentAlias.id = aliasID
         self.ip = ip
         self.userAgent = userAgent
+        self.isSuccessful = isSuccessful
     }
 }

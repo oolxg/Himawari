@@ -24,12 +24,14 @@ struct UpdateAliasRequest: Content {
     let validUntil: Date?
     let isActive: Bool?
     let maxVisitsCount: Int?
+    let newDestination: String?
 
-    init(aliasID: UUID, validUntil: Date? = nil, isActive: Bool? = nil, maxVisitsCount: Int? = nil) {
+    init(aliasID: UUID, validUntil: Date? = nil, isActive: Bool? = nil, maxVisitsCount: Int? = nil, newDestination: String? = nil) {
         self.aliasID = aliasID
         self.validUntil = validUntil
         self.isActive = isActive
         self.maxVisitsCount = maxVisitsCount
+        self.newDestination = newDestination
     }
 }
 

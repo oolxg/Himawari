@@ -135,4 +135,49 @@ final class AliasControllerTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         })
     }
+
+    func testCreateAliasWithZeroMaxVisits() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com", maxVisitsCount: 0))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .badRequest)
+        })
+    }
+
+    func testUpdateAliasDestination() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.PUT, "api/v1", beforeRequest: { req in
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID, newDestination: "https://apple.com"))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+
+                try app.test(.GET, "test") { res in
+                    XCTAssertEqual(res.status, .seeOther)
+                    XCTAssertEqual(res.headers.first(name: .location), "https://apple.com")
+                }
+            })
+        })
+    }
+
+    func testUpdateAliasWithNoParams_shouldFail() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.PUT, "api/v1", beforeRequest: { req in
+                try req.content.encode(UpdateAliasRequest(aliasID: aliasID))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .badRequest)
+            })
+        })
+    }
 }
