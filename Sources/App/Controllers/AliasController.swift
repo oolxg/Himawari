@@ -62,9 +62,7 @@ struct AliasController: RouteCollection {
     func update(req: Request) async throws -> HTTPStatus {
         let updateRequest = try req.content.decode(UpdateAliasRequest.self)
 
-        if updateRequest.validUntil == nil && updateRequest.isActive == nil &&
-                   updateRequest.maxVisitsCount == nil && updateRequest.newDestination == nil &&
-                   updateRequest.description == nil {
+        guard updateRequest.hasUpdates else {
             throw Abort(.badRequest, reason: "Nothing to update")
         }
 

@@ -34,6 +34,14 @@ struct UpdateAliasRequest: Content {
     let maxVisitsCount: Int?
     let newDestination: String?
     let description: String?
+    
+    var hasUpdates: Bool {
+        validUntil.hasValue ||
+        isActive.hasValue ||
+        maxVisitsCount.hasValue ||
+        newDestination.hasValue ||
+        description.hasValue
+    }
 
     init(
         aliasID: UUID,
