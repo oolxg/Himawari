@@ -6,11 +6,11 @@
 <h3 align="center">Link shortener written in Swift and Vapor</h3>
 
 #### How to install:
-You need to have docker installed on your machine
+You need to have docker installed on your machine.
 * First clone the project `git clone https://github.com/oolxg/Himawari`
-* Then build it and run 	`docker-compose up --build -d`
-	* In this repo `Dockerfile` is configured for Linux machines with arm processors
-* Configure you server(nginx/Apachee) to port 8083(default port for Himawari)
+* Then build it and run `docker-compose up --build -d`
+	* In this repo `Dockerfile` is configured for Linux machines with arm processors.
+* Configure you server(nginx/Apachee) to port 8083(default port for Himawari).
 * Enjoy!
 	
 #### Contribution
@@ -20,3 +20,7 @@ If you found error, typo or just want to add some new feature, feel free to cont
 #### App Icon
 
 Copyright © 2023 Oleg M. All rights reserved.
+
+#### Extra
+
+This project will get its app to use soon(hopefully)ю
