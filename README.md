@@ -23,4 +23,4 @@ Copyright © 2023 Oleg M. All rights reserved.
 
 #### Extra
 
-This project will get its app to use soon(hopefully)ю
+This project will get its app to use soon(hopefully).
