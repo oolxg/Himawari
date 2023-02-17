@@ -101,4 +101,46 @@ final class StatisticsControllerTests: XCTestCase {
             })
         })
     }
+
+    func testShowOnlySuccessfulVisits() throws {
+        let expected1 = Visit(aliasID: UUID(), ip: "145.145.145.145", userAgent: "Test User Agent1")
+        let expected2 = Visit(aliasID: UUID(), ip: "144.144.144.144", userAgent: "Googlebot")
+        
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test1", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            let aliasID2 = try res.content.decode(URLAlias.self).id!
+            
+            try app.test(.POST, "api/v1", beforeRequest: { req in
+                try req.content.encode(CreateAliasRequest(alias: "test2", destination: "https://bing.com"))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+                try app.test(.GET, "test1", beforeRequest: { req in
+                    req.headers.add(name: .userAgent, value: expected1.userAgent!)
+                    req.headers.add(name: "CF-Connecting-IP", value: expected1.ip!)
+                }, afterResponse: { res in
+                    XCTAssertEqual(res.status, .seeOther)
+                    XCTAssertEqual(res.headers.first(name: .location), "https://google.com")
+                    
+                    try app.test(.GET, "test2", beforeRequest: { req in
+                        req.headers.add(name: .userAgent, value: expected2.userAgent!)
+                        req.headers.add(name: "CF-Connecting-IP", value: expected2.ip!)
+                    }, afterResponse: { res in
+                        XCTAssertEqual(res.status, .notFound)
+                        
+                        try app.test(.GET, "stat?showOnlySuccessful=true") { res in
+                            XCTAssertEqual(res.status, .ok)
+                            
+                            let visits = try res.content.decode([Visit].self)
+                            XCTAssertEqual(visits.count, 1)
+                            XCTAssertEqual(visits[0].ip, expected1.ip)
+                            XCTAssertEqual(visits[0].userAgent, expected1.userAgent)
+                            XCTAssertEqual(visits[0].$parentAlias.id, aliasID2)
+                        }
+                    })
+                })
+            })
+        })
+    }
 }
