@@ -167,4 +167,49 @@ final class RedirectControllerTests: XCTestCase {
             })
         })
     }
+
+    func testWebCrawlerRedirect_notSuccessful() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+
+            try app.test(.GET, "test", headers: ["User-Agent": "Googlebot"], afterResponse: { res in
+                XCTAssertEqual(res.status, .notFound)
+
+                try app.test(.GET, "stat/\(aliasID)", afterResponse: { res in
+                    XCTAssertEqual(res.status, .ok)
+
+                    let visits = try res.content.decode([Visit].self)
+                    XCTAssertEqual(visits.count, 1)
+                    XCTAssertFalse(visits[0].isSuccessful)
+                })
+            })
+        })
+    }
+
+    func testRedirectNormalUserAgent_Successful() throws {
+        try app.test(.POST, "api/v1", beforeRequest: { req in
+            try req.content.encode(CreateAliasRequest(alias: "test", destination: "https://google.com"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+
+            let aliasID = try res.content.decode(URLAlias.self).id!
+            let ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+            try app.test(.GET, "test", headers: ["User-Agent": ua], afterResponse: { res in
+                XCTAssertEqual(res.status, .seeOther)
+                XCTAssertEqual(res.headers.first(name: .location), "https://google.com")
+
+                try app.test(.GET, "stat/\(aliasID)", afterResponse: { res in
+                    XCTAssertEqual(res.status, .ok)
+
+                    let visits = try res.content.decode([Visit].self)
+                    XCTAssertEqual(visits.count, 1)
+                    XCTAssertTrue(visits[0].isSuccessful)
+                })
+            })
+        })
+    }
 }

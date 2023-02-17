@@ -51,7 +51,8 @@ struct AliasController: RouteCollection {
             destination: createRequest.destination,
             validUntil: createRequest.validUntil,
             maxVisitsCount: createRequest.maxVisitsCount,
-            description: createRequest.description
+            description: createRequest.description,
+            allowBots: createRequest.allowBots ?? false
         )
 
         try await alias.save(on: req.db)
@@ -76,7 +77,8 @@ struct AliasController: RouteCollection {
             alias.maxVisitsCount = updateRequest.maxVisitsCount
             alias.destination = updateRequest.newDestination ?? alias.destination
             alias.description = updateRequest.description ?? alias.description
-            try await alias.save(on: req.db)
+            alias.allowBots = updateRequest.allowBots ?? alias.allowBots
+            try await alias.update(on: req.db)
             return .ok
         }
         

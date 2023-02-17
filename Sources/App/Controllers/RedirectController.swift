@@ -26,6 +26,13 @@ struct RedirectController: RouteCollection {
         
         let visit = Visit(aliasID: alias.id!, ip: ip, userAgent: ua)
 
+        let userAgent = req.headers.first(name: .userAgent) ?? ""
+        let isCrawlerOrBot = userAgent.contains("bot") || userAgent.contains("crawler") || userAgent.contains("spider")
+        if !alias.allowBots && isCrawlerOrBot {
+            try await visit.save(on: req.db)
+            throw Abort(.notFound)
+        }
+
         if let validUntil = alias.validUntil, validUntil < Date() {
             try await visit.save(on: req.db)
             throw Abort(.notFound)

@@ -30,6 +30,10 @@ final class URLAlias: Model, Content {
     @Field(key: "description")
     var description: String?
 
+    // allow bots and crawlers
+    @Field(key: "allow_bots")
+    var allowBots: Bool
+
     @Children(for: \.$parentAlias)
     var visits: [Visit]
 
@@ -41,12 +45,13 @@ final class URLAlias: Model, Content {
 
     init() { }
 
-    init(alias: String, destination: String, validUntil: Date? = nil, isActive: Bool = true, maxVisitsCount: Int? = nil, description: String? = nil) {
+    init(alias: String, destination: String, validUntil: Date? = nil, isActive: Bool = true, maxVisitsCount: Int? = nil, description: String? = nil, allowBots: Bool = false) {
         self.alias = alias
         self.destination = destination
         self.validUntil = validUntil
         self.isActive = isActive
         self.maxVisitsCount = maxVisitsCount
         self.description = description
+        self.allowBots = allowBots
     }
 }

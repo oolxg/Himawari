@@ -26,6 +26,7 @@ public func runMigrations(_ app: Application) throws {
     app.migrations.add(AddURLAliasMaxVisitsCount())
     app.migrations.add(UpdateVisitAddIsSuccessful())
     app.migrations.add(URLAliasCreateDescription())
+    app.migrations.add(URLAliasAllowBots())
     
     if app.environment == .testing {
         try app.autoRevert().wait()
