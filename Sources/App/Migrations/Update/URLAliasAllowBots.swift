@@ -8,7 +8,7 @@ import Fluent
 struct URLAliasAllowBots: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema(URLAlias.schema)
-            .field("allow_bots", .bool, .required, .sql(.default(true)))
+            .field("allow_bots", .bool, .required, .sql(.default(false)))
             .update()
     }
 
